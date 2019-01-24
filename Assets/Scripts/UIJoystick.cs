@@ -7,8 +7,9 @@ using System.Collections;
 [AddComponentMenu("NGUI/Interaction/Drag Object")]
 public class UIJoystick : MonoBehaviour {
 
-    public Playermoving player;
-	static UIJoystick[] joysticks ; 					// A static collection of all joysticks
+    public bool roton;
+    public Playercnt pl;
+    static UIJoystick[] joysticks ; 					// A static collection of all joysticks
 	static bool enumeratedJoysticks = false;
 	
 	/// <summary>
@@ -69,9 +70,9 @@ public class UIJoystick : MonoBehaviour {
 	public void OnPress (bool pressed) {
 		if (target != null) {
 			mPressed = pressed;
-
+            
 			if (pressed) {
-                player.enabled = true;
+                
                 StopAllCoroutines();
 				if (Time.time < lastTapTime +doubleTapTimeWindow) {
 					
@@ -108,7 +109,7 @@ public class UIJoystick : MonoBehaviour {
 				
 			} else {
 				ResetJoystick ();
-                player.enabled = false;
+                roton = false;
             }
 		}
 	}
@@ -176,7 +177,15 @@ public class UIJoystick : MonoBehaviour {
 			
 			enumeratedJoysticks = true;
 		}
-	}
+        if (mPressed&&!pl.firing)
+        {
+            roton = true;
+        }
+        else
+        {
+            roton = false;
+        }
+    }
 	
 	void ResetJoystick () {
 		// Release the finger control and set the joystick back to the default position
