@@ -1,0 +1,128 @@
+[
+ {
+   "index": 0,
+   "name": "dagger",
+   "sort": "melee",
+   "eft": "normal",
+   "val": 10,
+   "bullet": null,
+   "usingtime": 0.4
+ },
+ {
+   "index": 1,
+   "name": "long sword",
+   "sort": "melee",
+   "eft": "normal",
+   "val": 30,
+   "bullet": null,
+   "usingtime": 0.6
+ },
+ {
+   "index": 2,
+   "name": "arrow",
+   "sort": "range",
+   "eft": "normal",
+   "val": 20,
+   "bullet": 30,
+   "usingtime": 0.8
+ },
+ {
+   "index": 3,
+   "name": "poison arrow",
+   "sort": "range",
+   "eft": "poison",
+   "val": 15,
+   "bullet": 30,
+   "usingtime": 0.8
+ },
+ {
+   "index": 4,
+   "name": "fire staff",
+   "sort": "range",
+   "eft": "dot",
+   "val": 20,
+   "bullet": 10,
+   "usingtime": 1
+ },
+ {
+   "index": 5,
+   "name": "ice staff",
+   "sort": "range",
+   "eft": "slow",
+   "val": 20,
+   "bullet": 10,
+   "usingtime": 1
+ },
+ {
+   "index": 6,
+   "name": "lightning staff",
+   "sort": "range",
+   "eft": "knock",
+   "val": 20,
+   "bullet": 10,
+   "usingtime": 1
+ },
+ {
+   "index": 7,
+   "name": "1lv helmet",
+   "sort": "armor",
+   "eft": "1lv",
+   "val": 1,
+   "bullet": null,
+   "usingtime": null
+ },
+ {
+   "index": 8,
+   "name": "2lv helmet",
+   "sort": "armor",
+   "eft": "2lv",
+   "val": 2,
+   "bullet": null,
+   "usingtime": null
+ },
+ {
+   "index": 9,
+   "name": "3lv helmet",
+   "sort": "armor",
+   "eft": "3lv",
+   "val": 3,
+   "bullet": null,
+   "usingtime": null
+ },
+ {
+   "index": 10,
+   "name": "bandage",
+   "sort": "heal",
+   "eft": "insheal",
+   "val": 20,
+   "bullet": 1,
+   "usingtime": 3
+ },
+ {
+   "index": 11,
+   "name": "meat",
+   "sort": "heal",
+   "eft": "insheal",
+   "val": 50,
+   "bullet": 1,
+   "usingtime": 5
+ },
+ {
+   "index": 12,
+   "name": "beer",
+   "sort": "heal",
+   "eft": "dotheal",
+   "val": 30,
+   "bullet": 1,
+   "usingtime": 3
+ },
+ {
+   "index": 13,
+   "name": "wine",
+   "sort": "heal",
+   "eft": "dotheal",
+   "val": 50,
+   "bullet": 1,
+   "usingtime": 5
+ }
+]

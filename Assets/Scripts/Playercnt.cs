@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Utility;
@@ -24,10 +23,16 @@ public class Playercnt : MonoBehaviour
     public float cooltime;
     public UIButton pickbtn;
     EventDelegate picking;
+    public UILabel dmgtxt;
+    EventDelegate cngdmg;
+    public UIButton cngbtn;
+    public List<GameObject> grounditem;
 
     void Start()
-    {
+    {   
+        cngbtn = GameObject.Find("Changebtn").GetComponent<UIButton>();
         pickbtn = GameObject.Find("Pickupbtn").GetComponent<UIButton>();
+        dmgtxt = GameObject.Find("dmglabel").GetComponent<UILabel>();
         firebtn = GameObject.Find("Firebtn").GetComponent<UIEventTrigger>();
         stick = GameObject.Find("handle").GetComponent<UIJoystick>();
         stick.pl = this;
@@ -49,6 +54,8 @@ public class Playercnt : MonoBehaviour
         firebtn.onRelease.Add(fireoff);
         picking = new EventDelegate(this, "Pickupitem");
         pickbtn.onClick.Add(picking);
+        cngdmg = new EventDelegate(this, "Changedmg");
+        cngbtn.onClick.Add(cngdmg);
     }
     void Update()
     {
@@ -71,7 +78,14 @@ public class Playercnt : MonoBehaviour
                 if(cooltime>=atktime)
                 {
                     cooltime = 0;
-                    Fire();
+                    switch (GetComponentInChildren<Inventory>().cursort)
+                    {
+                        case "melee":
+                            break;
+                        case "range":
+                            Fire();
+                            break;
+                    }
                 }
             }
         }
@@ -94,10 +108,6 @@ public class Playercnt : MonoBehaviour
             currot = (Quaternion)stream.ReceiveNext();
         }
     }
-    public void Pickupitem(GameObject item)
-    {
-
-    }
     public void Firebtnon()
     {
         firing = true;
@@ -112,7 +122,7 @@ public class Playercnt : MonoBehaviour
         if (other.gameObject.tag == "Enemybullet")
         {
             int dmg = 0;
-            switch (GetComponent<Playerstat>().helmetlv)
+            switch (GetComponentInChildren<Inventory>().helmetlv)
             {
                 case 0:
                     dmg = other.GetComponent<Bulletmoving>().dmg;
@@ -129,7 +139,19 @@ public class Playercnt : MonoBehaviour
             }
             Hit(dmg);
             print(dmg);
+            dmgtxt.text = other.GetComponent<Bulletmoving>().dmg.ToString();
             Destroy(other.gameObject);
+        }
+        if(other.gameObject.tag=="Item")
+        {   
+            grounditem.Add(other.gameObject);
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.tag == "Item")
+        {
+            grounditem.Remove(other.gameObject);
         }
     }
     void Hit(int dmg)
@@ -160,7 +182,7 @@ public class Playercnt : MonoBehaviour
     IEnumerator Createbullet()
     {
         GameObject b= Instantiate(bullet, firepos.position, firepos.rotation);
-        b.GetComponent<Bulletmoving>().dmg = GetComponentInChildren<Itemmanager>().curweapondmg;
+        b.GetComponent<Bulletmoving>().dmg = GetComponentInChildren<Inventory>().curdmg;
         if (pv.isMine)
         {   
             b.tag = "Playerbullet";
@@ -175,5 +197,65 @@ public class Playercnt : MonoBehaviour
     void FireRPC()
     {
         StartCoroutine(Createbullet());
+    }
+
+    void Changedmg()
+    {   
+        int num= Random.Range(5, 16);
+        StartCoroutine(Cd(num));
+        pv.RPC("CdRPC", PhotonTargets.Others, num);
+    }
+    IEnumerator Cd(int dmg)
+    {
+        GetComponentInChildren<Inventory>().curdmg = dmg;
+        yield return null;
+    }
+    [PunRPC]
+    void CdRPC(int num)
+    {
+        StartCoroutine(Cd(num));
+    }
+
+    void Pickupitem()
+    {
+        if (grounditem.Count == 0)
+        {
+            return;
+        }
+        StartCoroutine(Pick());
+        pv.RPC("PickRPC", PhotonTargets.Others);
+    }
+    IEnumerator Pick()
+    {
+        Copyitemname(grounditem[0]);
+        Destroy(grounditem[0]);
+        grounditem.RemoveAt(0);
+        yield return null;
+    }
+    [PunRPC]
+    void PickRPC()
+    {
+        StartCoroutine(Pick());
+    }
+    
+    void Copyitemname(GameObject item)
+    {
+        Itemstat i = item.GetComponent<Itemstat>();
+        Inventory iv = GetComponentInChildren<Inventory>();
+        switch (i.sort)
+        {
+            case "melee":
+                //string throwname = iv.meleeweapon;
+                //iv.meleeweapon = i.name;
+                //iv.curdmg = i.val;
+                //iv.usingtime = i.usingtime;
+                break;
+            case "range":
+                break;
+            case "armor":
+                break;
+            case "heal":
+                break;
+        }
     }
 }
