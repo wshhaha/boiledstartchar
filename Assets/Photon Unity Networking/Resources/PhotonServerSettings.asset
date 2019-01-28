@@ -47,4 +47,5 @@ MonoBehaviour:
   - HitRPC
   - CdRPC
   - PickRPC
+  - FwRPC
   DisableAutoOpenWizard: 1

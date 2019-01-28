@@ -46,16 +46,20 @@ MonoBehaviour:
   itemlist: {fileID: 4900000, guid: 6d27fb54f79bfb246a326bc441279def, type: 3}
   p: {fileID: 0}
   helmetlv: 0
+  helmethp: 0
   curslot: 0
+  cursort: 
   cureft: 
   curdmg: 0
   curammo: 0
   curstack: 0
   usingtime: 0
+  itembox: {fileID: 4508192046543275217, guid: 74b41c5338ac09f4191722933ab19b8f, type: 3}
   weaponlist: []
   weaponindex: 
   remainammoinweapon: 
   remainammoininventory: 
+  cartridge: 
 --- !u!1 &1283194421205352
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,11 +300,12 @@ MonoBehaviour:
   firepos: {fileID: 4791791697706720}
   bullet: {fileID: 1481392177075394, guid: af3a84a6361d2a7459f20276057268cd, type: 3}
   firebtn: {fileID: 0}
-  atktime: 1
+  killscore: 0
   cooltime: 0
   pickbtn: {fileID: 0}
   dmgtxt: {fileID: 0}
-  cngbtn: {fileID: 0}
+  backweaponbtn: {fileID: 0}
+  frontweaponbtn: {fileID: 0}
   grounditem: []
 --- !u!114 &114500777691055012
 MonoBehaviour:

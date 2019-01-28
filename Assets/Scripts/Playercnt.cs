@@ -5,6 +5,8 @@ using UnityStandardAssets.Utility;
 
 public class Playercnt : MonoBehaviour
 {
+    public GameObject itembox;
+    Inventory iv;
     public bool firing;
     public UIJoystick stick;
     Vector3 stickpos;
@@ -19,18 +21,26 @@ public class Playercnt : MonoBehaviour
     public UIEventTrigger firebtn;
     EventDelegate fireon;
     EventDelegate fireoff;
-    public float atktime=1f;
+    public int killscore;
     public float cooltime;
     public UIButton pickbtn;
     EventDelegate picking;
     public UILabel dmgtxt;
-    EventDelegate cngdmg;
-    public UIButton cngbtn;
+    EventDelegate cngbw;
+    public UIButton backweaponbtn;
+    EventDelegate cngfw;
+    public UIButton frontweaponbtn;
     public List<GameObject> grounditem;
+    float reloadtime = 3;
+    float reloadcool;
+    int slotnum;
+    bool reload;
 
     void Start()
-    {   
-        cngbtn = GameObject.Find("Changebtn").GetComponent<UIButton>();
+    {
+        iv = GetComponentInChildren<Inventory>();
+        frontweaponbtn = GameObject.Find("Frontweapon").GetComponent<UIButton>();
+        backweaponbtn = GameObject.Find("Backweapon").GetComponent<UIButton>();
         pickbtn = GameObject.Find("Pickupbtn").GetComponent<UIButton>();
         dmgtxt = GameObject.Find("dmglabel").GetComponent<UILabel>();
         firebtn = GameObject.Find("Firebtn").GetComponent<UIEventTrigger>();
@@ -54,8 +64,10 @@ public class Playercnt : MonoBehaviour
         firebtn.onRelease.Add(fireoff);
         picking = new EventDelegate(this, "Pickupitem");
         pickbtn.onClick.Add(picking);
-        cngdmg = new EventDelegate(this, "Changedmg");
-        cngbtn.onClick.Add(cngdmg);
+        cngbw = new EventDelegate(this, "Backweapon");
+        backweaponbtn.onClick.Add(cngbw);
+        cngfw = new EventDelegate(this, "Frontweapon");
+        frontweaponbtn.onClick.Add(cngfw);
     }
     void Update()
     {
@@ -64,18 +76,18 @@ public class Playercnt : MonoBehaviour
             stickpos.x = stick.position.x;
             stickpos.y = 0;
             stickpos.z = stick.position.y;
-            Vector3 dir = stickpos - transform.position;
+            Vector3 dir = stickpos;
             dir.y = 0;
             dir.Normalize();
             transform.Translate(stick.position.x / 8 * Time.deltaTime * 0.5f, 0, stick.position.y / 8 * Time.deltaTime * 0.5f, Space.World);
             if (stick.roton == true)
-            {
-                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir), 10 * Time.deltaTime);
+            {   
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), rotspd * Time.deltaTime);
             }
             if(firing)
             {
                 cooltime += Time.deltaTime;
-                if(cooltime>=atktime)
+                if (cooltime >= iv.usingtime) 
                 {
                     cooltime = 0;
                     switch (GetComponentInChildren<Inventory>().cursort)
@@ -83,10 +95,49 @@ public class Playercnt : MonoBehaviour
                         case "melee":
                             break;
                         case "range":
-                            Fire();
+                            if (iv.curammo > 0)
+                            {
+                                Fire();
+                            }
                             break;
                     }
                 }
+            }
+            if (reload && slotnum == iv.curslot)
+            {
+                if (iv.remainammoininventory[slotnum] > 0)
+                {
+                    reloadcool += Time.deltaTime;
+                    if (reloadcool >= reloadtime)
+                    {
+                        reloadcool = 0;
+                        reload = false;
+                        if (iv.remainammoininventory[slotnum] >= iv.cartridge[slotnum])
+                        {
+                            iv.curammo = iv.cartridge[slotnum];
+                            iv.remainammoinweapon[slotnum] = iv.cartridge[slotnum];
+                            iv.remainammoininventory[slotnum] -= iv.cartridge[slotnum];
+                        }
+                        else
+                        {
+                            iv.curammo = iv.remainammoininventory[slotnum];
+                            iv.remainammoinweapon[slotnum] = iv.remainammoininventory[slotnum];
+                            iv.remainammoininventory[slotnum] = 0;
+                        }
+                    }
+                }
+                else
+                {
+                    reloadcool = 0;
+                    reload = false;
+                    iv.weaponlist[slotnum] = null;
+                    iv.weaponindex[slotnum] = 0;
+                    iv.cartridge[slotnum] = 0;
+                }
+            }
+            else
+            {
+                reloadcool = 0;
             }
         }
         else
@@ -138,7 +189,6 @@ public class Playercnt : MonoBehaviour
                     break;
             }
             Hit(dmg);
-            print(dmg);
             dmgtxt.text = other.GetComponent<Bulletmoving>().dmg.ToString();
             Destroy(other.gameObject);
         }
@@ -155,8 +205,7 @@ public class Playercnt : MonoBehaviour
         }
     }
     void Hit(int dmg)
-    {
-        print(dmg);
+    {   
         StartCoroutine(Hitbullet(dmg));
         pv.RPC("HitRPC", PhotonTargets.Others,dmg);
     }
@@ -165,9 +214,20 @@ public class Playercnt : MonoBehaviour
         GetComponent<Playerstat>().hp -= num;
         if (GetComponent<Playerstat>().hp <= 0)
         {
+            killscore++;
             Destroy(gameObject);
         }
         yield return null;
+    }
+    void Creategrave()
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = -1; j < 2; j++)
+            {
+                Instantiate(itembox, transform.position + new Vector3(i, 0, j), transform.rotation);
+            }
+        }
     }
     [PunRPC]
     void HitRPC(int dmg)
@@ -181,15 +241,22 @@ public class Playercnt : MonoBehaviour
     }
     IEnumerator Createbullet()
     {
-        GameObject b= Instantiate(bullet, firepos.position, firepos.rotation);
+        GameObject b = Instantiate(bullet, firepos.position, firepos.rotation);
         b.GetComponent<Bulletmoving>().dmg = GetComponentInChildren<Inventory>().curdmg;
+        iv.curammo--;
+        iv.remainammoinweapon[iv.curslot]--;
         if (pv.isMine)
-        {   
+        {
             b.tag = "Playerbullet";
         }
         else
         {
             b.tag = "Enemybullet";
+        }
+        if(iv.curammo<=0)
+        {
+            reload = true;
+            slotnum = iv.curslot;
         }
         yield return null;
     }
@@ -198,22 +265,37 @@ public class Playercnt : MonoBehaviour
     {
         StartCoroutine(Createbullet());
     }
-
-    void Changedmg()
-    {   
-        int num= Random.Range(5, 16);
-        StartCoroutine(Cd(num));
-        pv.RPC("CdRPC", PhotonTargets.Others, num);
-    }
-    IEnumerator Cd(int dmg)
+    
+    void Backweapon()
     {
-        GetComponentInChildren<Inventory>().curdmg = dmg;
+        StartCoroutine(Cd());
+        pv.RPC("CdRPC", PhotonTargets.Others);
+    }
+    IEnumerator Cd()
+    {   
+        iv.Backweapon();
         yield return null;
     }
     [PunRPC]
-    void CdRPC(int num)
+    void CdRPC()
     {
-        StartCoroutine(Cd(num));
+        StartCoroutine(Cd());
+    }
+
+    void Frontweapon()
+    {
+        StartCoroutine(Fw());
+        pv.RPC("FwRPC", PhotonTargets.Others);
+    }
+    IEnumerator Fw()
+    {   
+        iv.Frontweapon();
+        yield return null;
+    }
+    [PunRPC]
+    void FwRPC()
+    {
+        StartCoroutine(Fw());
     }
 
     void Pickupitem()
@@ -239,23 +321,8 @@ public class Playercnt : MonoBehaviour
     }
     
     void Copyitemname(GameObject item)
-    {
+    {   
         Itemstat i = item.GetComponent<Itemstat>();
-        Inventory iv = GetComponentInChildren<Inventory>();
-        switch (i.sort)
-        {
-            case "melee":
-                //string throwname = iv.meleeweapon;
-                //iv.meleeweapon = i.name;
-                //iv.curdmg = i.val;
-                //iv.usingtime = i.usingtime;
-                break;
-            case "range":
-                break;
-            case "armor":
-                break;
-            case "heal":
-                break;
-        }
+        iv.Createitem(i.index, i.bullet);
     }
 }
