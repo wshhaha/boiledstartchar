@@ -35,7 +35,7 @@ public class Playercnt : MonoBehaviour
     float reloadcool;
     int slotnum;
     bool reload;
-
+    
     void Start()
     {
         iv = GetComponentInChildren<Inventory>();
@@ -99,6 +99,10 @@ public class Playercnt : MonoBehaviour
                             {
                                 Fire();
                             }
+                            break;
+                        case "insheal":
+                            break;
+                        case "dotheal":
                             break;
                     }
                 }
@@ -172,23 +176,27 @@ public class Playercnt : MonoBehaviour
     {
         if (other.gameObject.tag == "Enemybullet")
         {
-            int dmg = 0;
+            int dmgtop = 0;
+            int dmgtoh = 0;
             switch (GetComponentInChildren<Inventory>().helmetlv)
             {
                 case 0:
-                    dmg = other.GetComponent<Bulletmoving>().dmg;
+                    dmgtop = other.GetComponent<Bulletmoving>().dmg;
                     break;
                 case 1:
-                    dmg = (int)(other.GetComponent<Bulletmoving>().dmg*.8f);
+                    dmgtop = (int)(other.GetComponent<Bulletmoving>().dmg * .8f);
+                    dmgtoh = (int)(other.GetComponent<Bulletmoving>().dmg * .2f);
                     break;
                 case 2:
-                    dmg = (int)(other.GetComponent<Bulletmoving>().dmg*.7f);
+                    dmgtop = (int)(other.GetComponent<Bulletmoving>().dmg * .7f);
+                    dmgtoh = (int)(other.GetComponent<Bulletmoving>().dmg * .3f);
                     break;
                 case 3:
-                    dmg = (int)(other.GetComponent<Bulletmoving>().dmg*.5f);
+                    dmgtop = (int)(other.GetComponent<Bulletmoving>().dmg * .6f);
+                    dmgtoh = (int)(other.GetComponent<Bulletmoving>().dmg * .4f);
                     break;
             }
-            Hit(dmg);
+            Hit(dmgtop, dmgtoh, other.GetComponent<Bulletmoving>().master.name);
             dmgtxt.text = other.GetComponent<Bulletmoving>().dmg.ToString();
             Destroy(other.gameObject);
         }
@@ -204,35 +212,70 @@ public class Playercnt : MonoBehaviour
             grounditem.Remove(other.gameObject);
         }
     }
-    void Hit(int dmg)
-    {   
-        StartCoroutine(Hitbullet(dmg));
-        pv.RPC("HitRPC", PhotonTargets.Others,dmg);
-    }
-    IEnumerator Hitbullet(int num)
+    void Hit(int dmg, int dmg2, string username)
     {
-        GetComponent<Playerstat>().hp -= num;
+        StartCoroutine(Hitbullet(dmg, dmg2, username));
+        pv.RPC("HitRPC", PhotonTargets.Others, dmg, dmg2, username);
+    }
+    IEnumerator Hitbullet(int dmg, int dmg2, string username)
+    {
+        GetComponent<Playerstat>().hp -= dmg;
+        iv.helmethp -= dmg2;
+        if (iv.helmethp <= 0)
+        {
+            iv.helmetlv = 0;
+            iv.helmethp = 0;
+        }
         if (GetComponent<Playerstat>().hp <= 0)
         {
-            killscore++;
-            Destroy(gameObject);
+            Creategrave();
+            GameObject.Find(username).GetComponent<Playercnt>().killscore++;
+            gameObject.SetActive(false);
         }
         yield return null;
     }
     void Creategrave()
     {
+        int num = 0;
+        List<int> indexlist = new List<int>();
+        List<int> ammolist = new List<int>();
+        List<GameObject> gravelist = new List<GameObject>();
+        List<Vector3> gravepos = new List<Vector3>();
         for (int i = -1; i < 2; i++)
         {
             for (int j = -1; j < 2; j++)
             {
-                Instantiate(itembox, transform.position + new Vector3(i, 0, j), transform.rotation);
+                gravepos.Add(transform.position + new Vector3(i, 0, j));
+            }
+        }
+        for (int i = 0; i < 7; i++)
+        {
+            if (iv.weaponlist[i] != "")
+            {
+                num++;
+                indexlist.Add(iv.weaponindex[i]);
+                ammolist.Add(iv.remainammoinweapon[i] + iv.remainammoininventory[i]);
+            }
+        }
+        for (int i = 0; i < num; i++)
+        {
+            GameObject grave = Instantiate(itembox,transform.position,Quaternion.identity);
+            grave.GetComponent<Itemstat>().index = indexlist[i];
+            grave.GetComponent<Itemstat>().bullet = ammolist[i];
+            gravelist.Add(grave);
+        }
+        if (num > 1)
+        {
+            for (int i = 0; i < num; i++)
+            {
+                gravelist[i].transform.position = gravepos[i];
             }
         }
     }
     [PunRPC]
-    void HitRPC(int dmg)
+    void HitRPC(int dmg, int dmg2, string username)
     {
-        StartCoroutine(Hitbullet(dmg));
+        StartCoroutine(Hitbullet(dmg, dmg2, username));
     }
     void Fire()
     {
@@ -245,8 +288,9 @@ public class Playercnt : MonoBehaviour
         b.GetComponent<Bulletmoving>().dmg = GetComponentInChildren<Inventory>().curdmg;
         iv.curammo--;
         iv.remainammoinweapon[iv.curslot]--;
+        b.GetComponent<Bulletmoving>().master = gameObject;
         if (pv.isMine)
-        {
+        {   
             b.tag = "Playerbullet";
         }
         else
@@ -268,8 +312,11 @@ public class Playercnt : MonoBehaviour
     
     void Backweapon()
     {
-        StartCoroutine(Cd());
-        pv.RPC("CdRPC", PhotonTargets.Others);
+        if (pv.isMine)
+        {
+            StartCoroutine(Cd());
+            pv.RPC("CdRPC", PhotonTargets.Others);
+        }
     }
     IEnumerator Cd()
     {   
@@ -284,8 +331,11 @@ public class Playercnt : MonoBehaviour
 
     void Frontweapon()
     {
-        StartCoroutine(Fw());
-        pv.RPC("FwRPC", PhotonTargets.Others);
+        if (pv.isMine)
+        {
+            StartCoroutine(Fw());
+            pv.RPC("FwRPC", PhotonTargets.Others);
+        }
     }
     IEnumerator Fw()
     {   

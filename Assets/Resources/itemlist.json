@@ -77,7 +77,7 @@
    "sort": "armor",
    "eft": "2lv",
    "val": 2,
-   "bullet": 100,
+   "bullet": 200,
    "usingtime": null
  },
  {
@@ -86,7 +86,7 @@
    "sort": "armor",
    "eft": "3lv",
    "val": 3,
-   "bullet": 100,
+   "bullet": 300,
    "usingtime": null
  },
  {

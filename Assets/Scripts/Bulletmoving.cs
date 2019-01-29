@@ -7,6 +7,7 @@ public class Bulletmoving : MonoBehaviour
     public float spd;
     public float destime=3;
     public int dmg;
+    public GameObject master;
     
     void Start()
     {   
