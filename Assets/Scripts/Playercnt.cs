@@ -35,7 +35,8 @@ public class Playercnt : MonoBehaviour
     float reloadcool;
     int slotnum;
     bool reload;
-    
+    Transform checktr;
+
     void Start()
     {
         iv = GetComponentInChildren<Inventory>();
@@ -86,25 +87,61 @@ public class Playercnt : MonoBehaviour
             }
             if(firing)
             {
-                cooltime += Time.deltaTime;
-                if (cooltime >= iv.usingtime) 
+                switch (GetComponentInChildren<Inventory>().cursort)
                 {
-                    cooltime = 0;
-                    switch (GetComponentInChildren<Inventory>().cursort)
-                    {
-                        case "melee":
-                            break;
-                        case "range":
+                    case "melee":
+                        break;
+                    case "range":
+                        cooltime += Time.deltaTime;
+                        if (cooltime >= iv.usingtime)
+                        {
+                            cooltime = 0;
                             if (iv.curammo > 0)
                             {
                                 Fire();
                             }
+                        }
+                        break;
+                    case "insheal":
+                        if(GetComponent<Playerstat>().hp>=100)
+                        {
                             break;
-                        case "insheal":
-                            break;
-                        case "dotheal":
-                            break;
-                    }
+                        }
+                        if(checktr==transform)
+                        {
+                            cooltime += Time.deltaTime;
+                            if (cooltime >= iv.usingtime)
+                            {
+                                cooltime = 0;
+                                if (iv.curammo > 0)
+                                {
+                                    Eat();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            cooltime = 0;
+                        }
+                        break;
+                    case "dotheal":
+                        if (checktr == transform)
+                        {
+                            cooltime += Time.deltaTime;
+                            if (cooltime >= iv.usingtime)
+                            {
+                                cooltime = 0;
+                                if (iv.curammo > 0)
+                                {
+                                    Eat();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            cooltime = 0;
+                        }
+                        break;
                 }
             }
             if (reload && slotnum == iv.curslot)
@@ -165,6 +202,7 @@ public class Playercnt : MonoBehaviour
     }
     public void Firebtnon()
     {
+        checktr = transform;
         firing = true;
     }
     public void Firebtnoff()
@@ -309,11 +347,53 @@ public class Playercnt : MonoBehaviour
     {
         StartCoroutine(Createbullet());
     }
-    
+
+    void Eat()
+    {
+        StartCoroutine(Healing());
+        pv.RPC("HealingRPC", PhotonTargets.Others);
+    }
+    IEnumerator Healing()
+    {
+        switch (iv.cursort)
+        {
+            case "insheal":
+                GetComponent<Playerstat>().hp += iv.curdmg;
+                if (GetComponent<Playerstat>().hp > 100)
+                {
+                    GetComponent<Playerstat>().hp = 100;
+                }
+                break;
+            case "dotheal":
+                GetComponent<Playerstat>().dothp += iv.curdmg;
+                if (GetComponent<Playerstat>().dothp > 100)
+                {
+                    GetComponent<Playerstat>().dothp = 100;
+                }
+                break;
+
+        }
+        iv.curammo--;
+        iv.remainammoinweapon[iv.curslot]--;
+        
+        if (iv.curammo <= 0)
+        {
+            reload = true;
+            slotnum = iv.curslot;
+        }
+        yield return null;
+    }
+    [PunRPC]
+    void HealingRPC()
+    {
+        StartCoroutine(Healing());
+    }
+
     void Backweapon()
     {
         if (pv.isMine)
         {
+            cooltime = 0;
             StartCoroutine(Cd());
             pv.RPC("CdRPC", PhotonTargets.Others);
         }
@@ -333,6 +413,7 @@ public class Playercnt : MonoBehaviour
     {
         if (pv.isMine)
         {
+            cooltime = 0;
             StartCoroutine(Fw());
             pv.RPC("FwRPC", PhotonTargets.Others);
         }

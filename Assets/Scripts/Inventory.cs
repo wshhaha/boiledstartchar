@@ -14,7 +14,6 @@ public class Inventory : MonoBehaviour
     public string cureft;
     public int curdmg;
     public int curammo;
-    public int curstack;
     public float usingtime;
     public GameObject itembox;
     public List<string> weaponlist;
@@ -91,7 +90,6 @@ public class Inventory : MonoBehaviour
         cursort = item[itemindex]["sort"];
         curdmg = item[itemindex]["val"];
         curammo = remainammoinweapon[slotnum];
-        curstack = remainammoininventory[slotnum];
         usingtime = item[itemindex]["usingtime"];
     }
     

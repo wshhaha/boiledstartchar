@@ -48,4 +48,5 @@ MonoBehaviour:
   - CdRPC
   - PickRPC
   - FwRPC
+  - HealingRPC
   DisableAutoOpenWizard: 1

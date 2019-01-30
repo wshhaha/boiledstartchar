@@ -19,7 +19,7 @@ public class Bulletmoving : MonoBehaviour
     }
     void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag=="Enemy")
+        if(other.gameObject.tag=="Map")
         {   
             Destroy(gameObject);
         }
