@@ -8,6 +8,7 @@ public class Bulletmoving : MonoBehaviour
     public float destime=3;
     public int dmg;
     public GameObject master;
+    public string eft;
     
     void Start()
     {   
@@ -19,8 +20,12 @@ public class Bulletmoving : MonoBehaviour
     }
     void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag=="Map")
-        {   
+        if (other.gameObject.tag == "Map")
+        {
+            Destroy(gameObject);
+        }
+        if (other.gameObject.tag == "Enemy")
+        {
             Destroy(gameObject);
         }
     }

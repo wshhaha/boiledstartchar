@@ -128,9 +128,15 @@ public class Inventory : MonoBehaviour
                     {
                         switch (curslot)
                         {
+                            case 1:
+                                Throwitem(1);
+                                Createweapon(1, itemindex, itemstack);
+                                Selectweapon(curslot, weaponindex[curslot]);
+                                break;
                             case 2:
                                 Throwitem(2);
                                 Createweapon(2, itemindex, itemstack);
+                                Selectweapon(curslot, weaponindex[curslot]);
                                 break;
                             default:
                                 Throwitem(1);

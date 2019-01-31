@@ -49,4 +49,9 @@ MonoBehaviour:
   - PickRPC
   - FwRPC
   - HealingRPC
+  - DhRPC
+  - FingRPC
+  - IingRPC
+  - PoingRPC
+  - SortingRPC
   DisableAutoOpenWizard: 1
